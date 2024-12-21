@@ -1,0 +1,35 @@
+import cv2
+import mediapipe as mp
+
+# Initializing Mediapipe Hand Detection
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
+hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+
+# Load the image
+image_path = "/mnt/data/image.png"  # เปลี่ยนเป็น path ของภาพที่ต้องการ
+image = cv2.imread(image_path)
+image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+# Detect hands in the image
+results = hands.process(image_rgb)
+
+# Draw hand landmarks and add text if hands are detected
+if results.multi_hand_landmarks:
+    for hand_landmarks in results.multi_hand_landmarks:
+        mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+    cv2.putText(image, 'Hands Detected', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+else:
+    cv2.putText(image, 'No Hands Detected', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+# Add the student name and group at the bottom
+cv2.putText(image, 'Name: YourName Group: YourGroup', (10, image.shape[0] - 10), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+# Save or display the result
+output_path = "/mnt/data/output_image.png"
+cv2.imwrite(output_path, image)
+print(f"Output saved at {output_path}")
+
+# Release resources
+hands.close()
