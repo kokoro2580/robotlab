@@ -1,0 +1,58 @@
+import cv2
+import mediapipe as mp
+
+cap = cv2.VideoCapture(0)
+
+mpHands = mp.solutions.hands
+hands = mpHands.Hands()
+mpDraw = mp.solutions.drawing_utils
+
+# รายชื่อนิ้วในลำดับที่ตรงกับ fingers
+finger_names = ["Thumb", "Index", "Middle", "Ring", "Little"]
+
+while True:
+    success, img = cap.read()
+    if not success:
+        break
+
+    imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    results = hands.process(imgRGB)
+
+    text = "" 
+    if results.multi_hand_landmarks:
+        for handLms in results.multi_hand_landmarks:
+            landmarks = []
+            h, w, c = img.shape
+
+            for lm in handLms.landmark:
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                landmarks.append((cx, cy))
+
+            # ตรวจสอบนิ้วที่กำลังชูอยู่
+            fingers = [
+                landmarks[4][1] < landmarks[3][1],  # นิ้วโป้ง
+                landmarks[8][1] < landmarks[6][1],  # นิ้วชี้
+                landmarks[12][1] < landmarks[10][1],  # นิ้วกลาง
+                landmarks[16][1] < landmarks[14][1],  # นิ้วนาง
+                landmarks[20][1] < landmarks[18][1]   # นิ้วก้อย
+            ]
+
+            # รวบรวมชื่อของนิ้วที่กำลังชู
+            raised_fingers = [finger_names[i] for i in range(5) if fingers[i]]
+            if raised_fingers:
+                text = ", ".join(raised_fingers) + " are raised!"
+
+            mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
+
+    if text:
+        cv2.putText(img, text, (50, 450), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
+        cv2.putText(img, "Hatsakon Santaweesuk 670610788", (30, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
+
+    cv2.imshow("Image", img)
+    
+    key = cv2.waitKey(1)
+    if key & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
