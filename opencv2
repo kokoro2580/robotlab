@@ -30,7 +30,7 @@ while True:
 
             # ตรวจสอบนิ้วที่กำลังชูอยู่
             fingers = [
-                landmarks[4][1] < landmarks[3][1],  # นิ้วโป้ง
+                landmarks[4] < landmarks[3],  # นิ้วโป้ง
                 landmarks[8][1] < landmarks[6][1],  # นิ้วชี้
                 landmarks[12][1] < landmarks[10][1],  # นิ้วกลาง
                 landmarks[16][1] < landmarks[14][1],  # นิ้วนาง
@@ -40,13 +40,13 @@ while True:
             # รวบรวมชื่อของนิ้วที่กำลังชู
             raised_fingers = [finger_names[i] for i in range(5) if fingers[i]]
             if raised_fingers:
-                text = ", ".join(raised_fingers) + " are raised!"
+                text = ", ".join(raised_fingers)
 
             mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
 
     if text:
-        cv2.putText(img, text, (50, 450), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
-        cv2.putText(img, "Hatsakon Santaweesuk 670610788", (30, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
+        cv2.putText(img, text, (50, 450), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 0, 255), 2)
+        cv2.putText(img, "Hatsakon Santaweesuk 670610788", (30, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
 
     cv2.imshow("Image", img)
     
