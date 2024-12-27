@@ -1,0 +1,79 @@
+import cv2
+import mediapipe as mp
+
+cap = cv2.VideoCapture(0)
+
+mpHands = mp.solutions.hands
+hands = mpHands.Hands()
+mpDraw = mp.solutions.drawing_utils
+
+# รายชื่อนิ้วในลำดับที่ตรงกับ fingers
+finger_names = ["Thumb", "Index", "Middle", "Ring", "Little"]
+
+while True:
+    success, img = cap.read()
+    if not success:
+        break
+
+    imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    results = hands.process(imgRGB)
+
+    text = "" 
+    total_raised_fingers_count = 0  # ตัวแปรนับจำนวนมือที่ชูทั้งหมด
+
+    if results.multi_hand_landmarks:
+        for handLms in results.multi_hand_landmarks:
+            landmarks = []
+            h, w, c = img.shape
+
+            for lm in handLms.landmark:
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                landmarks.append((cx, cy))
+
+            # ตรวจสอบนิ้วที่กำลังชูอยู่
+            # ตรวจสอบการชูนิ้วโป้ง
+            wrist_x = landmarks[0][0]  # x ของข้อมือ
+
+            # ตรวจสอบนิ้วโป้งและหาตำแหน่งมือ (ซ้ายหรือขวา)
+            if landmarks[4][0] < wrist_x:  # ถ้านิ้วโป้งชี้ไปทางซ้าย, หมายถึงมือซ้าย
+                hand_type = "Left Hand"
+                # นิ้วโป้งจะชูเมื่อมันอยู่ขวานิ้วชี้
+                thumb_is_raised = landmarks[4][0] < landmarks[3][0]
+            else:  # ถ้านิ้วโป้งชี้ไปทางขวา, หมายถึงมือขวา
+                hand_type = "Right Hand"
+                thumb_is_raised = landmarks[4][0] > landmarks[3][0]
+
+            # ตรวจสอบนิ้วที่กำลังชูอยู่ (สำหรับนิ้วอื่นๆ)
+            fingers = [
+                thumb_is_raised,  # นิ้วโป้ง
+                landmarks[8][1] < landmarks[6][1],  # นิ้วชี้
+                landmarks[12][1] < landmarks[10][1],  # นิ้วกลาง
+                landmarks[16][1] < landmarks[14][1],  # นิ้วนาง
+                landmarks[20][1] < landmarks[18][1]   # นิ้วก้อย
+            ]
+
+            # นับจำนวนนิ้วที่กำลังชูอยู่
+            raised_fingers_count = sum(fingers)
+            total_raised_fingers_count += raised_fingers_count
+
+            # รวบรวมชื่อของนิ้วที่กำลังชู
+            raised_fingers = [finger_names[i] for i in range(5) if fingers[i]]
+            if raised_fingers:
+                text = ", ".join(raised_fingers)
+            
+            # วาด landmarks บนภาพ
+            mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
+
+    # แสดงผลลัพธ์การนับนิ้วทั้งหมดของทั้งสองมือ
+    cv2.putText(img, f"Raised Fingers: {total_raised_fingers_count}", (50, 450), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 255, 0), 2)
+    cv2.putText(img, "Hatsakon Santaweesuk 670610788", (30, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
+
+    # แสดงภาพ
+    cv2.imshow("Image", img)
+    
+    key = cv2.waitKey(1)
+    if key & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
