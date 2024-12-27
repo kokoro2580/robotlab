@@ -37,7 +37,7 @@ while True:
     if results.multi_hand_landmarks:
         for hand_lms in results.multi_hand_landmarks:
             h, w, c = img.shape
-            landmarks = [(int(lm.x * w), int(lm.y * h)) for lm in hand_lms.landmark]
+            landmarks = [(int(lm.x * w),  (lm.y * h)) for lm in hand_lms.landmark]
 
             wrist_x = landmarks[0][0]  # x ของข้อมือ
 
@@ -66,8 +66,9 @@ while True:
     servo(total_raised_fingers_count, servo_pin)
 
     # แสดงผล
-    cv2.putText(img, f"Fingers: {total_raised_fingers_count}", (10, 50),
+    cv2.putText(img, f"Servo : {total_raised_fingers_count}", (45, 375),
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    cv2.putText(img, "Hatsakon Santaweesuk 670610788", (30, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
     cv2.imshow("Hand Tracking", img)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
